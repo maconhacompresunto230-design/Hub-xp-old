@@ -1,66 +1,90 @@
 -- ==============================================
 -- ⏱️ MOVER CONTADOR + BARRA DE XP PRA BAIXO
--- ✅ Só o tempo e a barra de XP
--- ✅ Não mexe em mais nada
+-- ✅ VERSÃO OTIMIZADA
+-- ✅ NÃO FICA VARRRENDO A GUI INTEIRA CONSTANTEMENTE
 -- ==============================================
 
 local Players = game:GetService("Players")
+
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- ⚙️ AJUSTE AQUI — quanto mais alto, mais pra baixo desce
-local QUANTO_DESCER = 10 -- 🔽 Mude aqui!
+-- ⚙️ quanto mais alto, mais pra baixo
+local QUANTO_DESCER = 10
 
--- 📦 Função para mover
-local function MoverElementos()
+-- nomes/textos que podem identificar o contador
+local function ehContador(obj)
+    local nome = obj.Name:lower()
+
+    local texto = ""
+    if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+        texto = obj.Text:lower()
+    end
+
+    return
+        nome:find("timer") or
+        nome:find("survival") or
+        texto:find("survival") or
+        texto:find("inocente") or
+        texto:find("tempo")
+end
+
+-- nomes que podem identificar a barra de xp
+local function ehXP(obj)
+    local nome = obj.Name:lower()
+
+    return
+        nome == "xp" or
+        nome:find("xpbar") or
+        nome:find("xp_bar") or
+        nome:find("experience") or
+        nome:find("progress")
+end
+
+local function mover(obj)
+    if not obj:IsA("GuiObject") then
+        return
+    end
+
+    -- evita mover o mesmo objeto novamente
+    if obj:GetAttribute("ContadorXPMovido") then
+        return
+    end
+
+    obj:SetAttribute("ContadorXPMovido", true)
+
+    local pos = obj.Position
+
+    obj.Position = UDim2.new(
+        pos.X.Scale,
+        pos.X.Offset,
+        pos.Y.Scale,
+        pos.Y.Offset + QUANTO_DESCER
+    )
+end
+
+local function procurar()
     for _, gui in ipairs(PlayerGui:GetChildren()) do
-        if not gui:IsA("ScreenGui") then continue end
+        if gui:IsA("ScreenGui") then
 
-        for _, obj in ipairs(gui:GetDescendants()) do
-            if not obj:IsA("GuiObject") then continue end
+            for _, obj in ipairs(gui:GetDescendants()) do
+                if obj:IsA("GuiObject") then
 
-            local nome = obj.Name:lower()
-            local texto = ""
-            pcall(function()
-                if obj:IsA("TextLabel") or obj:IsA("TextButton") then
-                    texto = obj.Text:lower()
+                    if ehContador(obj) or ehXP(obj) then
+                        mover(obj)
+                    end
+
                 end
-            end)
-
-            -- 🔍 Só CONTADOR (tempo) e BARRA DE XP
-            local eContadorOuXP = 
-                nome:find("timer") or nome:find("time") or 
-                nome:find("survival") or nome:find("xp") or
-                nome:find("bar") or nome:find("progress") or
-                texto:find("survival") or texto:find("xp") or
-                texto:find("inocente") or texto:find("tempo")
-
-            if eContadorOuXP then
-                -- Salva posição original
-                if not obj:GetAttribute("YOriginal") then
-                    obj:SetAttribute("YOriginal", obj.Position.Y.Offset)
-                end
-
-                -- Move pra baixo
-                local yOrig = obj:GetAttribute("YOriginal")
-                obj.Position = UDim2.new(
-                    obj.Position.X.Scale, obj.Position.X.Offset,
-                    obj.Position.Y.Scale, yOrig + QUANTO_DESCER
-                )
             end
+
         end
     end
 end
 
--- 🚀 Carrega
+-- espera a interface carregar
 task.wait(1)
-MoverElementos()
 
--- 🔄 Atualiza se recarregar
-PlayerGui.DescendantAdded:Connect(function()
-    task.wait(0.3)
-    MoverElementos()
-end)
+-- faz somente uma busca inicial
+procurar()
 
-print("✅ Contador e XP movidos +" .. QUANTO_DESCER .. "px pra baixo!")
-
+print("✅ contador e xp movidos +" .. QUANTO_DESCER .. "px")
