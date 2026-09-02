@@ -1,26 +1,17 @@
--- ==============================================
--- ⏱️ MOVER CONTADOR + BARRA DE XP PRA BAIXO
--- ✅ VERSÃO OTIMIZADA
--- ✅ NÃO FICA VARRRENDO A GUI INTEIRA CONSTANTEMENTE
--- ==============================================
-
 local Players = game:GetService("Players")
 
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- ⚙️ quanto mais alto, mais pra baixo
 local QUANTO_DESCER = 10
 
--- nomes/textos que podem identificar o contador
 local function ehContador(obj)
+    if not obj or not obj.Parent then return false end
     local nome = obj.Name:lower()
-
     local texto = ""
     if obj:IsA("TextLabel") or obj:IsA("TextButton") then
         texto = obj.Text:lower()
     end
-
     return
         nome:find("timer") or
         nome:find("survival") or
@@ -29,10 +20,9 @@ local function ehContador(obj)
         texto:find("tempo")
 end
 
--- nomes que podem identificar a barra de xp
 local function ehXP(obj)
+    if not obj or not obj.Parent then return false end
     local nome = obj.Name:lower()
-
     return
         nome == "xp" or
         nome:find("xpbar") or
@@ -42,49 +32,43 @@ local function ehXP(obj)
 end
 
 local function mover(obj)
-    if not obj:IsA("GuiObject") then
-        return
-    end
-
-    -- evita mover o mesmo objeto novamente
-    if obj:GetAttribute("ContadorXPMovido") then
-        return
-    end
-
+    if not obj or not obj.Parent or not obj:IsA("GuiObject") then return end
+    if obj:GetAttribute("ContadorXPMovido") then return end
     obj:SetAttribute("ContadorXPMovido", true)
 
-    local pos = obj.Position
+    local ok, pos = pcall(function() return obj.Position end)
+    if not ok or not pos then return end
 
-    obj.Position = UDim2.new(
-        pos.X.Scale,
-        pos.X.Offset,
-        pos.Y.Scale,
-        pos.Y.Offset + QUANTO_DESCER
-    )
+    pcall(function()
+        obj.Position = UDim2.new(
+            pos.X.Scale,
+            pos.X.Offset,
+            pos.Y.Scale,
+            pos.Y.Offset + QUANTO_DESCER
+        )
+    end)
 end
 
 local function procurar()
-    for _, gui in ipairs(PlayerGui:GetChildren()) do
-        if gui:IsA("ScreenGui") then
-
-            for _, obj in ipairs(gui:GetDescendants()) do
-                if obj:IsA("GuiObject") then
-
-                    if ehContador(obj) or ehXP(obj) then
-                        mover(obj)
+    pcall(function()
+        for _, gui in ipairs(PlayerGui:GetChildren()) do
+            if gui:IsA("ScreenGui") and gui.Parent then
+                for _, obj in ipairs(gui:GetDescendants()) do
+                    if obj and obj.Parent and obj:IsA("GuiObject") then
+                        if ehContador(obj) or ehXP(obj) then
+                            mover(obj)
+                        end
                     end
-
                 end
             end
-
         end
-    end
+    end)
 end
 
--- espera a interface carregar
 task.wait(1)
-
--- faz somente uma busca inicial
 procurar()
 
-print("✅ contador e xp movidos +" .. QUANTO_DESCER .. "px")
+PlayerGui.ChildAdded:Connect(function(child)
+    task.wait(0.2)
+    procurar()
+end)
