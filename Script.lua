@@ -3,7 +3,8 @@ local Players = game:GetService("Players")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
-local QUANTO_DESCER = 10
+-- ⚙️ quanto mais alto, mais pra baixo
+local QUANTO_DESCER = 15
 
 local function ehContador(obj)
     if not obj or not obj.Parent then return false end
@@ -16,19 +17,25 @@ local function ehContador(obj)
         nome:find("timer") or
         nome:find("survival") or
         texto:find("survival") or
-        texto:find("inocente") or
-        texto:find("tempo")
+        texto:find("xp") or
+        texto:find("m") and texto:find("s") or
+        texto:match("%d+m %d+s")
 end
 
 local function ehXP(obj)
     if not obj or not obj.Parent then return false end
     local nome = obj.Name:lower()
+    local texto = ""
+    if obj:IsA("TextLabel") or obj:IsA("TextButton") then
+        texto = obj.Text:lower()
+    end
     return
         nome == "xp" or
         nome:find("xpbar") or
         nome:find("xp_bar") or
         nome:find("experience") or
-        nome:find("progress")
+        nome:find("progress") or
+        texto:match("^%d+$") and texto:len() <= 5
 end
 
 local function mover(obj)
@@ -51,6 +58,7 @@ end
 
 local function procurar()
     pcall(function()
+        if not PlayerGui or not PlayerGui.Parent then return end
         for _, gui in ipairs(PlayerGui:GetChildren()) do
             if gui:IsA("ScreenGui") and gui.Parent then
                 for _, obj in ipairs(gui:GetDescendants()) do
@@ -68,7 +76,14 @@ end
 task.wait(1)
 procurar()
 
-PlayerGui.ChildAdded:Connect(function(child)
+PlayerGui.ChildAdded:Connect(function()
     task.wait(0.2)
     procurar()
+end)
+
+PlayerGui.ChildRemoved:Connect(function(child)
+    if child:IsA("ScreenGui") then
+        task.wait(0.3)
+        procurar()
+    end
 end)
