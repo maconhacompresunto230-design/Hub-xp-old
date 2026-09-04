@@ -1,37 +1,28 @@
 local Players = game:GetService("Players")
-
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
--- ⚙️ Aumenta aqui se quiser ainda mais pra baixo
-local QUANTO_DESCER = 20
+local QUANTO_DESCER = 15
 
-local function ehOContadorCerto(obj)
-    if not obj or not obj.Parent then return false end
-    if not obj:IsA("GuiObject") then return false end
-
-    local nome = obj.Name:lower()
+local function eOQueMover(obj)
+    if not obj or not obj.Parent or not obj:IsA("GuiObject") then return false end
     local texto = ""
     if obj:IsA("TextLabel") or obj:IsA("TextButton") then
         texto = obj.Text:lower()
     end
 
-    -- SÓ PEGA ISSO AQUI:
     return
-        nome:find("survival") or
-        nome:find("timer") or
         texto == "survival xp" or
-        texto:find("^%d+m %d+s$") or
-        (texto:match("^%d+$") and obj.Parent and obj.Parent:FindFirstChildWhichIsA("GuiObject") and (
+        texto:match("^%d+m %d+s$") or
+        (texto:match("^%d+$") and obj.Parent and (
             obj.Parent.Name:lower():find("survival") or
             (obj.Parent:FindFirstChildWhichIsA("GuiObject") and obj.Parent:FindFirstChildWhichIsA("GuiObject").Text:lower() == "survival xp")
         ))
 end
 
 local function mover(obj)
-    if not obj or not obj.Parent then return end
-    if obj:GetAttribute("ContadorXPMovido") then return end
-    obj:SetAttribute("ContadorXPMovido", true)
+    if obj:GetAttribute("JaMovido") then return end
+    obj:SetAttribute("JaMovido", true)
 
     local ok, pos = pcall(function() return obj.Position end)
     if not ok or not pos then return end
@@ -52,7 +43,7 @@ local function procurar()
         for _, gui in ipairs(PlayerGui:GetChildren()) do
             if gui:IsA("ScreenGui") and gui.Parent then
                 for _, obj in ipairs(gui:GetDescendants()) do
-                    if ehOContadorCerto(obj) then
+                    if eOQueMover(obj) then
                         mover(obj)
                     end
                 end
