@@ -11,33 +11,30 @@ local function eContadorParaMover(obj)
 
     local texto = ""
     if obj:IsA("TextLabel") or obj:IsA("TextButton") then
-        texto = obj.Text
+        texto = obj.Text:lower()
     end
 
-    -- Move o texto "Survival XP"
-    if texto:lower() == "survival xp" then
+    -- Pega o texto "Survival XP"
+    if texto == "survival xp" then
         return true
     end
 
-    -- Move o número abaixo do Survival XP
-    if texto:match("^%d+$") and obj.Parent then
-        local textoPai = ""
-        if obj.Parent:IsA("TextLabel") or obj.Parent:IsA("TextButton") then
-            textoPai = obj.Parent.Text:lower()
-        end
-
-        if textoPai == "survival xp" then
-            return true
-        end
-
-        if obj.Parent.Parent and obj.Parent.Parent:IsA("TextLabel") then
-            if obj.Parent.Parent.Text:lower() == "survival xp" then
-                return true
+    -- Pega QUALQUER número (inteiro ou decimal) que esteja no mesmo grupo/filho do Survival XP
+    if texto:match("^%d+$") or texto:match("^%d+%.%d+$") then
+        local pai = obj.Parent
+        while pai do
+            for _, filho in ipairs(pai:GetDescendants()) do
+                if filho:IsA("TextLabel") or filho:IsA("TextButton") then
+                    if filho.Text:lower() == "survival xp" then
+                        return true
+                    end
+                end
             end
+            pai = pai.Parent
         end
     end
 
-    -- Move QUALQUER tempo no formato 0m 0s, 9m 59s, 10m 0s etc.
+    -- Pega QUALQUER tempo no formato 0m 0s, 9m 59s, 10m 0s...
     if texto:match("^%d+m %d+s$") then
         return true
     end
@@ -46,12 +43,7 @@ local function eContadorParaMover(obj)
 end
 
 local function moverContador(obj)
-    if obj:GetAttribute("JaMovido") then
-        return
-    end
-
-    obj:SetAttribute("JaMovido", true)
-
+    -- REMOVI a trava de "já movido" para funcionar sempre que precisar
     local ok, pos = pcall(function()
         return obj.Position
     end)
@@ -88,15 +80,16 @@ local function procurarContadores()
     end)
 end
 
+-- Roda várias vezes pra garantir que pega tudo, mesmo que carregue devagar
+local loop = game:GetService("RunService").Heartbeat:Connect(function()
+    procurarContadores()
+end)
+
+-- Reinicia tudo quando o personagem carrega de novo (nova partida)
+Player.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    procurarContadores()
+end)
+
 task.wait(1)
 procurarContadores()
-
-PlayerGui.ChildAdded:Connect(function()
-    task.wait(0.2)
-    procurarContadores()
-end)
-
-PlayerGui.ChildRemoved:Connect(function()
-    task.wait(0.3)
-    procurarContadores()
-end)
