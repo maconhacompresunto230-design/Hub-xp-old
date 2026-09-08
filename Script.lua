@@ -13,13 +13,13 @@ local function lowerUI()
         -- Posição original do MM2: reta, centralizada, no topo
         local EarnedXP = GameFrame:FindFirstChild("EarnedXP")
         if EarnedXP then
-            EarnedXP.Position = UDim2.new(0.5, 0, 0.05, 0)
+            EarnedXP.Position = UDim2.new(0.5, 0, 0.04, 0)
             EarnedXP.AnchorPoint = Vector2.new(0.5, 0)
         end
 
         local Timer = GameFrame:FindFirstChild("Timer")
         if Timer then
-            Timer.Position = UDim2.new(0.5, 0, 0.05, 0)
+            Timer.Position = UDim2.new(0.5, 0, 0.04, 0)
             Timer.AnchorPoint = Vector2.new(0.5, 0)
         end
     end)
